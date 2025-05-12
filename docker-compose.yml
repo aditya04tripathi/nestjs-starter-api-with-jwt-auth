@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  dev-db:
+    image: postgres:latest
+    ports:
+      - '5431:5432'
+    environment:
+      POSTGRES_USER: aditya
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: template_db
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
