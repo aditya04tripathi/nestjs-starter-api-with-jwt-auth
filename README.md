@@ -34,23 +34,11 @@ This is the Nest framework TypeScript starter repository that I created.
 
 Follow these steps to initialize my NestJS project:
 
-1. Download the scaffold script:
-
-   ```bash
-   curl -o scaffold-nest-js-project.sh https://raw.githubusercontent.com/aditya04tripathi/nestjs-starter-api-with-jwt-auth/refs/heads/main/scaffold-nest-js-project.sh
-   ```
-
-2. Make the script executable:
-
-   ```bash
-   chmod +x scaffold-nest-js-project.sh
-   ```
-
-3. Run the script:
-
-   ```bash
-   ./scaffold-nest-js-project.sh <project_name>
-   ```
+```bash
+curl -o scaffold-nest-js-project.sh https://raw.githubusercontent.com/aditya04tripathi/nestjs-starter-api-with-jwt-auth/refs/heads/main/scaffold-nest-js-project.sh
+chmod +x scaffold-nest-js-project.sh
+./scaffold-nest-js-project.sh <project_name>
+```
 
 ## Contributions
 
