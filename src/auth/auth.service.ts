@@ -30,7 +30,7 @@ export class AuthService {
       );
     }
 
-    const passwordMatches = await argon.verify(user.hash!, password);
+    const passwordMatches = await argon.verify(user.hashedPassword!, password);
     if (!passwordMatches) {
       throw new HttpException(
         'The password entered seems to be invalid. Please try again.',
