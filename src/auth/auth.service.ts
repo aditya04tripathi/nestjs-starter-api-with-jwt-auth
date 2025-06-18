@@ -38,18 +38,19 @@ export class AuthService {
       );
     }
 
-    const token = await this.signToken(user.id!, user.email!);
+    const token = await this.signToken(user.id, user.email);
 
     return token;
   }
 
   async signup(dto: SignUpDto) {
-    const hash = await argon.hash(dto.password);
+    const hashedPassword = await argon.hash(dto.password);
 
     await this.prisma.user.create({
       data: {
         email: dto.email,
-        hash,
+        hashedPassword: hashedPassword,
+        name: dto.name,
       },
     });
 
@@ -84,7 +85,7 @@ export class AuthService {
         id: userId,
       },
       select: {
-        hash: false,
+        hashedPassword: false,
       },
     });
 
