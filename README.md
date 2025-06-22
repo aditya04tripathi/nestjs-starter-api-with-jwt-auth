@@ -83,6 +83,7 @@ pnpm run start:dev
 - `pnpm run test:e2e` - Run end-to-end tests
 - `pnpm run lint` - Run ESLint
 - `pnpm run format` - Format code with Prettier
+- `pnpm pr-ready` - Check if the current code base is ready for a pull request
 
 ## Project Structure
 
