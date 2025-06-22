@@ -14,9 +14,7 @@ Use one of these scripts to easily scaffold a new project:
 
 - JWT Authentication with refresh tokens
 - User registration and login
-- Role-based access control
 - Prisma ORM with PostgreSQL
-- Docker setup for local development
 - Comprehensive test setup
 - Input validation
 - Environment configuration
