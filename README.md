@@ -19,7 +19,6 @@ Use one of these scripts to easily scaffold a new project:
 - Input validation
 - Environment configuration
 - Error handling
-- Logging
 
 ## Quick Start
 
@@ -64,7 +63,7 @@ cp .env.example .env
 # Edit .env file with your database credentials
 
 # Run database migrations
-npx prisma migrate dev --name "init"
+pnpm run db:dev:generate
 
 # Start the development server
 pnpm run start:dev
@@ -72,17 +71,36 @@ pnpm run start:dev
 
 ## Available Commands
 
+### Application Commands
+
 - `pnpm run start` - Start the application
 - `pnpm run start:dev` - Start the application in development mode
 - `pnpm run start:debug` - Start the application in debug mode
 - `pnpm run start:prod` - Start the application in production mode
+- `pnpm run build` - Build the application
+
+### Database Commands
+
+- `pnpm run db:dev:generate` - Generate Prisma client
+- `pnpm run db:dev:push` - Push schema changes to database
+- `pnpm run db:dev:reset` - Reset database and migrations
+- `pnpm run db:dev:studio` - Open Prisma Studio
+- `pnpm run db:dev:prod` - Deploy migrations to production
+- `pnpm run db:dev:ready-for-deployment` - Prepare database for deployment
+
+### Testing Commands
+
 - `pnpm run test` - Run tests
 - `pnpm run test:watch` - Run tests in watch mode
 - `pnpm run test:cov` - Run tests with coverage
 - `pnpm run test:debug` - Run tests in debug mode
 - `pnpm run test:e2e` - Run end-to-end tests
+
+### Code Quality Commands
+
 - `pnpm run lint` - Run ESLint
 - `pnpm run format` - Format code with Prettier
+- `pnpm run format:check` - Check code formatting
 - `pnpm run pr-ready` - Check if the current code base is ready for a pull request
 
 ## Project Structure
@@ -103,7 +121,7 @@ src/
 Before submitting a pull request, please ensure your code is ready by running:
 
 ```bash
-npm run pr-ready
+pnpm run pr-ready
 ```
 
 This command will:
@@ -120,7 +138,7 @@ Contributions are welcome! Here's how you can help improve this project:
 ### Setting up for Development
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/nestjs-starter-api-with-jwt-auth.git`
+2. Clone your fork: `git clone https://github.com/aditya04tripathi/nestjs-starter-api-with-jwt-auth.git`
 3. Create your feature branch: `git checkout -b feature/your-feature-name`
 4. Install dependencies: `pnpm install`
 
