@@ -11,6 +11,7 @@
 		"db:dev:push": "prisma db push",
 		"db:dev:studio": "prisma studio",
 		"db:dev:generate": "prisma generate",
+		"db:dev:seed": "prisma db seed",
 		"db:dev:ready-for-deployment": "npm run db:dev:reset && npm run db:dev:prod && npm run db:dev:generate && npm run db:dev:push",
 		"build": "nest build",
 		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -91,5 +92,8 @@
 		],
 		"coverageDirectory": "../coverage",
 		"testEnvironment": "node"
+	},
+	"prisma": {
+		"seed": "ts-node prisma/seed.ts"
 	}
 }

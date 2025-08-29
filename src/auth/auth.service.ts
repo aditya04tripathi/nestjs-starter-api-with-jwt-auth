@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignInDto, SignUpDto } from './dto';
+import { AuthSigninDto, AuthSignupDto, ChangePasswordDto, ForgotPasswordDto } from 'src/auth/dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -14,7 +14,7 @@ export class AuthService {
 		private jwt: JwtService,
 	) {}
 
-	async signin(dto: SignInDto) {
+	async signin(dto: AuthSigninDto) {
 		const { email, password } = dto;
 
 		const user = await this.prisma.user.findUnique({
@@ -30,7 +30,7 @@ export class AuthService {
 			);
 		}
 
-		const passwordMatches = await argon.verify(user.hashedPassword, password);
+		const passwordMatches = await argon.verify(user.hashedPassword!, password);
 		if (!passwordMatches) {
 			throw new HttpException(
 				'The password entered seems to be invalid. Please try again.',
@@ -43,7 +43,7 @@ export class AuthService {
 		return token;
 	}
 
-	async signup(dto: SignUpDto) {
+	async signup(dto: AuthSignupDto) {
 		const hashedPassword = await argon.hash(dto.password);
 
 		await this.prisma.user.create({
@@ -90,5 +90,48 @@ export class AuthService {
 		}
 
 		return userData;
+	}
+
+	async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+		const { currentPassword, newPassword } = changePasswordDto;
+
+		const user = await this.prisma.user.findUnique({
+			where: { id: userId },
+		});
+
+		if (!user) {
+			throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+		}
+
+		const passwordMatches = await argon.verify(user.hashedPassword!, currentPassword);
+		if (!passwordMatches) {
+			throw new HttpException('Current password is incorrect', HttpStatus.UNAUTHORIZED);
+		}
+
+		const hashedNewPassword = await argon.hash(newPassword);
+
+		await this.prisma.user.update({
+			where: { id: userId },
+			data: { hashedPassword: hashedNewPassword },
+		});
+
+		return { message: 'Password changed successfully' };
+	}
+
+	async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+		const { email } = forgotPasswordDto;
+
+		const user = await this.prisma.user.findUnique({
+			where: { email },
+		});
+
+		if (!user) {
+			// Don't reveal if the email exists or not for security
+			return { message: 'If the email exists, a password reset link has been sent' };
+		}
+
+		// Here you would typically send an email with a reset token
+		// For now, just return a success message
+		return { message: 'If the email exists, a password reset link has been sent' };
 	}
 }

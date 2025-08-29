@@ -1,33 +1,54 @@
-# NestJS Starter API with JWT Authentication
+# NestJS Skilltree API
 
-A production-ready NestJS starter template with JWT authentication, Prisma ORM, and Docker setup.
-
-## Scaffold Scripts
-
-Use one of these scripts to easily scaffold a new project:
-
-- **Bash (Unix/macOS)**: [scaffold-nest-js-project.sh](https://gist.githubusercontent.com/aditya04tripathi/f6a55dc4ebe2c85fc571b12ad2df1353/raw/5ae9b28b8e7827dabbb8769e0d722bb2051ac4a3/scaffold-nest-js-project.sh)
-- **PowerShell (Windows)**: [scaffold-nest-js-project.ps1](https://gist.githubusercontent.com/aditya04tripathi/f6a55dc4ebe2c85fc571b12ad2df1353/raw/5ae9b28b8e7827dabbb8769e0d722bb2051ac4a3/scaffold-nest-js-project.ps1)
-- **Batch (Windows)**: [scaffold-nest-js-project.bat](https://gist.githubusercontent.com/aditya04tripathi/f6a55dc4ebe2c85fc571b12ad2df1353/raw/5ae9b28b8e7827dabbb8769e0d722bb2051ac4a3/scaffold-nest-js-project.bat)
+A comprehensive NestJS API with JWT authentication, user management, and skilltree functionality, based on the FIT3170 project structure.
 
 ## Features
 
-- JWT Authentication with refresh tokens
-- User registration and login
-- Prisma ORM with PostgreSQL
-- Comprehensive test setup
-- Input validation
-- Environment configuration
-- Error handling
+- **Authentication & Authorization**
+  - JWT Authentication with refresh tokens
+  - User registration and login
+  - Password change and reset functionality
+  - Role-based access control
+  - Public route decorators
+
+- **User Management**
+  - User profiles
+  - User statistics
+  - Profile updates
+
+- **Skilltree Management**
+  - Create and manage skilltrees
+  - User-specific skilltree progress
+  - CRUD operations for skilltrees
+
+- **Technical Features**
+  - Prisma ORM with PostgreSQL
+  - Global exception filters
+  - Response transformation interceptors
+  - Input validation with class-validator
+  - Swagger API documentation
+  - Environment configuration
+  - CORS support
+
+## Project Structure
+
+```
+src/
+├── _utils/              # Shared utilities
+│   ├── decorator/       # Custom decorators (GetUser, Public, Roles)
+│   ├── filters/         # Exception filters
+│   ├── guards/          # Authentication and authorization guards
+│   ├── interceptors/    # Response transformation
+│   └── strategy/        # JWT strategy
+├── auth/               # Authentication module
+├── common/             # Common services
+├── prisma/             # Database service
+├── skilltree/          # Skilltree management
+├── types/              # Shared type definitions
+└── user/               # User management
+```
 
 ## Quick Start
-
-### 1. Clone using a scaffold script
-
-Using bash (Unix/macOS):
-
-```bash
-curl -o scaffold.sh https://gist.githubusercontent.com/aditya04tripathi/f6a55dc4ebe2c85fc571b12ad2df1353/raw/5ae9b28b8e7827dabbb8769e0d722bb2051ac4a3/scaffold-nest-js-project.sh
 chmod +x scaffold.sh
 ./scaffold.sh my-project-name
 ```

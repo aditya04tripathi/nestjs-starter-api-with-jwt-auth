@@ -1,2 +1,4 @@
-export * from './signup.dto';
-export * from './signin.dto';
+export * from './auth-signup.dto';
+export * from './auth-signin.dto';
+export * from './change-password.dto';
+export * from './forgot-password.dto';

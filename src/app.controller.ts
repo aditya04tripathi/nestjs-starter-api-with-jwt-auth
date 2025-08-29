@@ -2,7 +2,7 @@ import { Controller, Get, Post, UploadedFile, UseInterceptors } from '@nestjs/co
 import { AppService } from './app.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import path, { extname } from 'path';
+import { extname, join } from 'path';
 
 @Controller()
 export class AppController {
@@ -12,7 +12,7 @@ export class AppController {
 	@UseInterceptors(
 		FileInterceptor('file', {
 			storage: diskStorage({
-				destination: path.join(__dirname, '..', 'uploads'),
+				destination: join(__dirname, '..', 'uploads'),
 				filename: (req, file, cb) => {
 					const randomName = Array(32)
 						.fill(null)
@@ -23,8 +23,6 @@ export class AppController {
 			}),
 		}),
 	)
-	// For multiple files, use the below line instead:
-	// uploadFile(@UploadedFiles() files: Array<Express.Multer.File>) {
 	uploadFile(@UploadedFile() file: Express.Multer.File): string {
 		console.log(file);
 		return `File ${file.originalname} uploaded successfully!`;

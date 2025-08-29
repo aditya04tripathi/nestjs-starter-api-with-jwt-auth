@@ -1,0 +1,95 @@
+### Health Check
+GET http://localhost:3000
+
+### Sign Up
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123",
+  "name": "Test User"
+}
+
+### Sign In
+POST http://localhost:3000/auth/signin
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Get User Profile (requires JWT token)
+GET http://localhost:3000/auth/me
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Get User Profile via User Controller
+GET http://localhost:3000/user/profile
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Update User Profile
+PATCH http://localhost:3000/user/profile
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "name": "Updated Name"
+}
+
+### Get User Stats
+GET http://localhost:3000/user/stats
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Change Password
+PATCH http://localhost:3000/auth/change-password
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "currentPassword": "password123",
+  "newPassword": "newpassword123"
+}
+
+### Forgot Password
+POST http://localhost:3000/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### Get All Skilltrees
+GET http://localhost:3000/skilltree
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Create Skilltree
+POST http://localhost:3000/skilltree
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "Sample Skilltree",
+  "description": "A sample skilltree for testing"
+}
+
+### Get User Skilltrees
+GET http://localhost:3000/skilltree/user
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Get Specific Skilltree
+GET http://localhost:3000/skilltree/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### Update Skilltree
+PATCH http://localhost:3000/skilltree/1
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "title": "Updated Skilltree Title"
+}
+
+### Delete Skilltree
+DELETE http://localhost:3000/skilltree/1
+Authorization: Bearer YOUR_JWT_TOKEN_HERE

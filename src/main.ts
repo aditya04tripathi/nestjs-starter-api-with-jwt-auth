@@ -2,32 +2,37 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { MulterModule } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
+	const configService = app.get(ConfigService);
+
+	app.enableCors({
+		origin: configService.get('CORS_ORIGIN') || 'http://localhost:3000',
+		credentials: true,
+	});
 
 	app.useGlobalPipes(
 		new ValidationPipe({
 			whitelist: true,
+			forbidNonWhitelisted: true,
+			transform: true,
 		}),
 	);
 
-	MulterModule.register({
-		dest: './upload',
-	});
-
 	const config = new DocumentBuilder()
 		.setTitle('Template API')
-		.setDescription(
-			'This is the API documentation for Template API - a curated template created by Aditya Tripathi.',
-		)
-		.setVersion('0.0.1')
+		.setDescription('This is the documentation for the starter template made by Aditya Tripathi')
+		.setVersion('1.0.0')
+		.addBearerAuth()
 		.build();
 
 	const documentFactory = () => SwaggerModule.createDocument(app, config);
 	SwaggerModule.setup('api', app, documentFactory);
 
-	await app.listen(process.env.PORT ?? 3000);
+	const port = configService.get('PORT') || 3000;
+	await app.listen(port);
+	console.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();
