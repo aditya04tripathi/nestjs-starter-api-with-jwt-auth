@@ -33,22 +33,54 @@ A comprehensive NestJS API with JWT authentication, user management, and skilltr
 ## Project Structure
 
 ```
+.env
+.env.example
+.gitignore
+.prettierrc
+api.http
+docker-compose.yml
+eslint.config.mjs
+LICENSE
+nest-cli.json
+package.json
+pnpm-lock.yaml
+README.md
+swagger.json
+tsconfig.build.json
+tsconfig.json
+validate-swagger.js
+prisma/
+  ├── schema.prisma
+  └── seed.ts
 src/
-├── _utils/              # Shared utilities
-│   ├── decorator/       # Custom decorators (GetUser, Public, Roles)
-│   ├── filters/         # Exception filters
-│   ├── guards/          # Authentication and authorization guards
-│   ├── interceptors/    # Response transformation
-│   └── strategy/        # JWT strategy
-├── auth/               # Authentication module
-├── common/             # Common services
-├── prisma/             # Database service
-├── skilltree/          # Skilltree management
-├── types/              # Shared type definitions
-└── user/               # User management
+  ├── app.controller.ts
+  ├── app.module.ts
+  ├── app.service.ts
+  ├── main.ts
+  ├── auth/
+  │   ├── auth.controller.ts
+  │   ├── auth.module.ts
+  │   ├── auth.service.ts
+  │   └── dto/
+  ├── common/
+  ├── prisma/
+  ├── types/
+  ├── user/
+  │   └── dto/
+  │   └── ...
+  └── utils/
+test/
+  ├── app.e2e-spec.ts
+  └── jest-e2e.json
+uploads/
+  └── UPLOADS_GO_HERE
 ```
 
 ## Quick Start
+
+### 1. Scaffold a new project (optional)
+
+```bash
 chmod +x scaffold.sh
 ./scaffold.sh my-project-name
 ```
@@ -124,19 +156,6 @@ pnpm run start:dev
 - `pnpm run format:check` - Check code formatting
 - `pnpm run pr-ready` - Check if the current code base is ready for a pull request
 
-## Project Structure
-
-```
-src/
-├── auth/              # Authentication modules and services
-├── common/            # Common utilities, decorators, guards
-├── config/            # Configuration modules
-├── prisma/            # Prisma schema and migrations
-├── user/              # User modules and services
-├── app.module.ts      # Main application module
-├── main.ts            # Application entry point
-```
-
 ## Contributing
 
 Before submitting a pull request, please ensure your code is ready by running:
@@ -208,6 +227,3 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-MIT
