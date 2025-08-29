@@ -81,6 +81,7 @@ uploads/
 ### 1. Scaffold a new project (optional)
 
 ```bash
+curl -o scaffold.sh https://gist.githubusercontent.com/aditya04tripathi/f6a55dc4ebe2c85fc571b12ad2df1353/raw/5ae9b28b8e7827dabbb8769e0d722bb2051ac4a3/scaffold-nest-js-project.sh
 chmod +x scaffold.sh
 ./scaffold.sh my-project-name
 ```
