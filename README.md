@@ -123,15 +123,36 @@ pnpm run db:dev:generate
 pnpm run start:dev
 ```
 
-## Available Commands
+## Environment Configuration
 
-### Application Commands
+### Backend Environment Variables
 
-- `pnpm run start` - Start the application
-- `pnpm run start:dev` - Start the application in development mode
-- `pnpm run start:debug` - Start the application in debug mode
-- `pnpm run start:prod` - Start the application in production mode
-- `pnpm run build` - Build the application
+The backend uses separate environment configuration from the frontend. Copy `.env.example` to `.env` and configure the following variables:
+
+#### Required Variables
+
+- `DATABASE_URL`: PostgreSQL connection string
+- `JWT_SECRET`: Secret key for JWT token signing
+- `PORT`: Server port (default: 3001)
+
+#### Storage Configuration (Backend Only)
+
+- `AWS_S3_BUCKET`: S3 bucket for file storage
+- `AWS_ACCESS_KEY_ID`: AWS access key
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key
+- `UPLOAD_PATH`: Local upload directory path
+
+#### AI Configuration
+
+- `OPENAI_API_KEY`: OpenAI API key for AI features
+- `AI_MODEL`: AI model to use (default: gpt-4)
+
+#### Monitoring
+
+- `SENTRY_DSN`: Sentry DSN for error tracking
+- `LOG_LEVEL`: Logging level (debug, info, warn, error)
+
+**Note**: Storage configurations are separated between frontend and backend. Frontend handles client-side storage (localStorage, sessionStorage), while backend manages server-side storage (S3, Redis, database).
 
 ### Database Commands
 
