@@ -1,6 +1,6 @@
 # NestJS Skilltree API
 
-A comprehensive NestJS API with JWT authentication, user management, and skilltree functionality, based on the FIT3170 project structure.
+A comprehensive NestJS API with JWT authentication, user management, and skilltree functionality.
 
 ## Features
 
