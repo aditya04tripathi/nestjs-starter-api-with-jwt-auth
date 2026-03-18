@@ -7,12 +7,6 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
 	let app: INestApplication<App>;
 
-	beforeAll(() => {
-		process.env.NODE_ENV = 'test';
-		process.env.JWT_SECRET = 'test-secret';
-		process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
-	});
-
 	beforeEach(async () => {
 		const moduleFixture: TestingModule = await Test.createTestingModule({
 			imports: [AppModule],
