@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
@@ -14,6 +14,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { RealtimeModule } from 'src/realtime/realtime.module';
+import { HealthModule } from 'src/health/health.module';
+import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
+import { RequestLoggerMiddleware } from 'src/common/middleware/request-logger.middleware';
 
 @Module({
 	imports: [
@@ -43,6 +46,7 @@ import { RealtimeModule } from 'src/realtime/realtime.module';
 		CommonModule,
 		UserModule,
 		RealtimeModule,
+		HealthModule,
 	],
 	controllers: [AppController],
 	providers: [
@@ -69,4 +73,10 @@ import { RealtimeModule } from 'src/realtime/realtime.module';
 		},
 	],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+	configure(consumer: MiddlewareConsumer): void {
+		consumer
+			.apply(RequestIdMiddleware, RequestLoggerMiddleware)
+			.forRoutes({ path: '*', method: RequestMethod.ALL });
+	}
+}

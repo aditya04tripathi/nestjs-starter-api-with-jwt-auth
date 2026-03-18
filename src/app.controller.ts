@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
+import { Public } from 'src/utils/decorator';
 
 @Controller()
 export class AppController {
@@ -29,6 +30,7 @@ export class AppController {
 	}
 
 	@Get()
+	@Public()
 	getHello(): string {
 		return this.appService.getHello();
 	}
