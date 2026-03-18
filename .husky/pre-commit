@@ -3,7 +3,7 @@
 
 echo "Running build check..."
 
-npm run build
+bun run build
 
 if [ $? -ne 0 ]; then
   echo "Build failed. Commit aborted."
