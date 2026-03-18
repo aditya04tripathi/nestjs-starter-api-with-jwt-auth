@@ -16,7 +16,9 @@ interface RealtimeEventPayload {
 @WebSocketGateway({
 	namespace: '/realtime',
 	cors: {
-		origin: true,
+		origin: process.env.CORS_ORIGIN
+			? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+			: ['http://localhost:3000', 'http://127.0.0.1:3000'],
 		credentials: true,
 	},
 })

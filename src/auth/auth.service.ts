@@ -1,5 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { AuthSigninDto, AuthSignupDto, ChangePasswordDto, ForgotPasswordDto } from 'src/auth/dto';
+import {
+	AuthSigninDto,
+	AuthSignupDto,
+	ChangePasswordDto,
+	ForgotPasswordDto,
+	ResetPasswordDto,
+} from 'src/auth/dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -8,6 +14,7 @@ import { UserEntity } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { AuthenticatedUser } from 'src/types';
 import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class AuthService {
@@ -43,9 +50,7 @@ export class AuthService {
 			);
 		}
 
-		const token = await this.signToken(user.id, user.email);
-
-		return token;
+		return this.issueAndPersistTokens(user.id, user.email);
 	}
 
 	async signup(dto: AuthSignupDto) {
@@ -63,8 +68,10 @@ export class AuthService {
 				email: user.email,
 				name: user.name,
 			});
+			return this.issueAndPersistTokens(user.id, user.email);
 		} catch (error: unknown) {
-			const code = typeof error === 'object' && error !== null ? (error as { code?: string }).code : undefined;
+			const code =
+				typeof error === 'object' && error !== null ? (error as { code?: string }).code : undefined;
 			if (code === '23505') {
 				throw new HttpException(
 					`The user with ${dto.email} already exists. Please sign in.`,
@@ -73,22 +80,32 @@ export class AuthService {
 			}
 			throw error;
 		}
-
-		return {
-			message: 'A new user has been created successfully. Enjoy your time on TemplateAPI!',
-		};
 	}
 
-	async signToken(userId: string, email: string): Promise<{ access_token: string }> {
+	async signToken(
+		userId: string,
+		email: string,
+	): Promise<{ access_token: string; refresh_token: string }> {
 		const payload = {
 			sub: userId,
 			email,
 		};
+		const accessSecret = this.config.get<string>('JWT_SECRET');
+		if (!accessSecret) {
+			throw new HttpException('JWT secret is not configured', HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET') ?? accessSecret;
+		const accessExpiresIn = this.config.get<string>('JWT_EXPIRES_IN') ?? '1h';
+		const refreshExpiresIn = this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
 
 		return {
 			access_token: await this.jwt.signAsync(payload, {
-				secret: this.config.get('JWT_SECRET')!,
-				expiresIn: '1h',
+				secret: accessSecret,
+				expiresIn: accessExpiresIn,
+			}),
+			refresh_token: await this.jwt.signAsync(payload, {
+				secret: refreshSecret,
+				expiresIn: refreshExpiresIn,
 			}),
 		};
 	}
@@ -133,6 +150,7 @@ export class AuthService {
 			{ id: userId },
 			{
 				hashedPassword: hashedNewPassword,
+				refreshTokenHash: null,
 			},
 		);
 		this.pubSubService.publish('user.password_changed', { userId });
@@ -150,7 +168,103 @@ export class AuthService {
 		if (!user) {
 			return { message: 'If the email exists, a password reset link has been sent' };
 		}
+		const rawToken = randomUUID();
+		const passwordResetTokenHash = await argon.hash(rawToken);
+		const passwordResetWindowMinutes = Number(
+			this.config.get<string>('PASSWORD_RESET_TOKEN_TTL_MINUTES') ?? 15,
+		);
+		const passwordResetTokenExpiresAt = new Date(
+			Date.now() + passwordResetWindowMinutes * 60 * 1000,
+		);
+		await this.usersRepository.update(
+			{ id: user.id },
+			{
+				passwordResetTokenHash,
+				passwordResetTokenExpiresAt,
+			},
+		);
+		this.pubSubService.publish('user.password_reset_requested', {
+			userId: user.id,
+			email: user.email,
+			token: rawToken,
+			expiresAt: passwordResetTokenExpiresAt.toISOString(),
+		});
 
 		return { message: 'If the email exists, a password reset link has been sent' };
+	}
+
+	async refreshToken(refreshToken: string) {
+		const accessSecret = this.config.get<string>('JWT_SECRET');
+		if (!accessSecret) {
+			throw new HttpException('JWT secret is not configured', HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET') ?? accessSecret;
+		let payload: { sub: string; email: string };
+		try {
+			payload = await this.jwt.verifyAsync<{ sub: string; email: string }>(refreshToken, {
+				secret: refreshSecret,
+			});
+		} catch {
+			throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+		}
+		const user = await this.usersRepository
+			.createQueryBuilder('user')
+			.addSelect('user.refreshTokenHash')
+			.where('user.id = :id', { id: payload.sub })
+			.getOne();
+		if (!user?.refreshTokenHash) {
+			throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+		}
+		const isValid = await argon.verify(user.refreshTokenHash, refreshToken);
+		if (!isValid) {
+			throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+		}
+		return this.issueAndPersistTokens(user.id, user.email);
+	}
+
+	async logout(userId: string) {
+		await this.usersRepository.update({ id: userId }, { refreshTokenHash: null });
+		return { message: 'Logged out successfully' };
+	}
+
+	async resetPassword(dto: ResetPasswordDto) {
+		const user = await this.usersRepository
+			.createQueryBuilder('user')
+			.addSelect('user.passwordResetTokenHash')
+			.addSelect('user.passwordResetTokenExpiresAt')
+			.where('user.email = :email', { email: dto.email })
+			.getOne();
+		if (!user?.passwordResetTokenHash || !user.passwordResetTokenExpiresAt) {
+			throw new HttpException('Invalid or expired reset token', HttpStatus.BAD_REQUEST);
+		}
+		if (user.passwordResetTokenExpiresAt.getTime() < Date.now()) {
+			throw new HttpException('Invalid or expired reset token', HttpStatus.BAD_REQUEST);
+		}
+		const isValid = await argon.verify(user.passwordResetTokenHash, dto.token);
+		if (!isValid) {
+			throw new HttpException('Invalid or expired reset token', HttpStatus.BAD_REQUEST);
+		}
+		const hashedPassword = await argon.hash(dto.newPassword);
+		await this.usersRepository.update(
+			{ id: user.id },
+			{
+				hashedPassword,
+				passwordResetTokenHash: null,
+				passwordResetTokenExpiresAt: null,
+				refreshTokenHash: null,
+			},
+		);
+		this.pubSubService.publish('user.password_reset_completed', {
+			userId: user.id,
+			email: user.email,
+		});
+		return { message: 'Password reset successful' };
+	}
+
+	private async issueAndPersistTokens(userId: string, email: string) {
+		const tokens = await this.signToken(userId, email);
+		const refreshTokenHash = await argon.hash(tokens.refresh_token);
+		await this.usersRepository.update({ id: userId }, { refreshTokenHash });
+		return tokens;
 	}
 }
