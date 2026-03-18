@@ -1,5 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+const resetTokenExpiresAtType = process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+
 @Entity({ name: 'User' })
 export class UserEntity {
 	@PrimaryGeneratedColumn('uuid')
@@ -20,6 +22,6 @@ export class UserEntity {
 	@Column({ type: 'varchar', nullable: true, select: false })
 	passwordResetTokenHash: string | null;
 
-	@Column({ type: 'timestamptz', nullable: true, select: false })
+	@Column({ type: resetTokenExpiresAtType, nullable: true, select: false })
 	passwordResetTokenExpiresAt: Date | null;
 }

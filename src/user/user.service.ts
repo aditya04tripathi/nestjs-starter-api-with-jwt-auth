@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from 'src/user/dto';
 import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
-import { UserRepository, USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
+import { USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
+import type { UserRepository } from 'src/user/repositories/user-repository.port';
 
 @Injectable()
 export class UserService {

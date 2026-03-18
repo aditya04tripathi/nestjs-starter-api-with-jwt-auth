@@ -12,7 +12,8 @@ import { ConfigService } from '@nestjs/config';
 import { AuthenticatedUser } from 'src/types';
 import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
 import { randomUUID } from 'node:crypto';
-import { UserRepository, USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
+import { USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
+import type { UserRepository } from 'src/user/repositories/user-repository.port';
 
 @Injectable()
 export class AuthService {

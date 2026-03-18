@@ -1,5 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+const createdAtColumnType = process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+
 @Entity({ name: 'AuditLog' })
 export class AuditLogEntity {
 	@PrimaryGeneratedColumn('uuid')
@@ -29,6 +31,6 @@ export class AuditLogEntity {
 	@Column({ type: 'varchar', length: 512, nullable: true })
 	userAgent: string | null;
 
-	@CreateDateColumn({ type: 'timestamptz' })
+	@CreateDateColumn({ type: createdAtColumnType })
 	createdAt: Date;
 }
