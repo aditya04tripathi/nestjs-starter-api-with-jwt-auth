@@ -290,36 +290,36 @@ All API responses pass through a response-transform interceptor and are wrapped 
 
 ### Public endpoints
 
-- `GET /`
-- `GET /health`
-- `GET /health/live`
-- `GET /health/ready`
-- `POST /auth/signup`
-- `POST /auth/signin`
-- `POST /auth/forgot-password`
-- `POST /auth/reset-password`
-- `POST /auth/refresh`
+- `GET    /`
+- `GET    /health`
+- `GET    /health/live`
+- `GET    /health/ready`
+- `POST   /auth/signup`
+- `POST   /auth/signin`
+- `POST   /auth/forgot-password`
+- `POST   /auth/reset-password`
+- `POST   /auth/refresh`
 
 ### Authenticated endpoints
 
-- `POST /upload` (multipart file upload using `file` field)
-- `GET /auth/me`
-- `PATCH /auth/change-password`
-- `POST /auth/logout`
-- `GET /user/profile`
-- `PATCH /user/profile`
+- `POST   /upload` (multipart file upload using `file` field)
+- `GET    /auth/me`
+- `PATCH  /auth/change-password`
+- `POST   /auth/logout`
+- `GET    /user/profile`
+- `PATCH  /user/profile`
 
 ### Auth payload contracts
 
-#### `POST /auth/signup`
+#### `POST   /auth/signup`
 
 Request:
 
 ```json
 {
-  "email": "user@example.com",
-  "name": "User",
-  "password": "Password123!"
+	"email": "user@example.com",
+	"name": "User",
+	"password": "Password123!"
 }
 ```
 
@@ -327,8 +327,8 @@ Response `data` includes:
 
 ```json
 {
-  "access_token": "<jwt>",
-  "refresh_token": "<jwt>"
+	"access_token": "<jwt>",
+	"refresh_token": "<jwt>"
 }
 ```
 
@@ -338,8 +338,8 @@ Request:
 
 ```json
 {
-  "email": "user@example.com",
-  "password": "Password123!"
+	"email": "user@example.com",
+	"password": "Password123!"
 }
 ```
 
@@ -347,8 +347,8 @@ Response `data`:
 
 ```json
 {
-  "access_token": "<jwt>",
-  "refresh_token": "<jwt>"
+	"access_token": "<jwt>",
+	"refresh_token": "<jwt>"
 }
 ```
 
@@ -358,7 +358,7 @@ Request:
 
 ```json
 {
-  "refreshToken": "<jwt>"
+	"refreshToken": "<jwt>"
 }
 ```
 
@@ -366,8 +366,8 @@ Response `data`:
 
 ```json
 {
-  "access_token": "<rotated-jwt>",
-  "refresh_token": "<rotated-jwt>"
+	"access_token": "<rotated-jwt>",
+	"refresh_token": "<rotated-jwt>"
 }
 ```
 
@@ -377,7 +377,7 @@ Request:
 
 ```json
 {
-  "email": "user@example.com"
+	"email": "user@example.com"
 }
 ```
 
@@ -389,9 +389,9 @@ Request:
 
 ```json
 {
-  "email": "user@example.com",
-  "token": "<reset-token>",
-  "newPassword": "NewPassword123!"
+	"email": "user@example.com",
+	"token": "<reset-token>",
+	"newPassword": "NewPassword123!"
 }
 ```
 
@@ -403,8 +403,8 @@ Request:
 
 ```json
 {
-  "currentPassword": "Password123!",
-  "newPassword": "NewPassword123!"
+	"currentPassword": "Password123!",
+	"newPassword": "NewPassword123!"
 }
 ```
 
