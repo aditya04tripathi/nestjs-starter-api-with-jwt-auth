@@ -116,6 +116,9 @@ This project is a backend starter built with NestJS and designed for production-
 - **Realtime**: Socket.IO
 - **Validation**: class-validator + class-transformer
 - **API docs**: @nestjs/swagger
+- **Caching**: @nestjs/cache-manager (Keyv + Redis optional)
+- **Queues**: BullMQ (@nestjs/bullmq)
+- **Scheduling**: @nestjs/schedule
 - **Runtime/package manager**: Bun
 - **Testing**: Jest + Supertest
 - **CI**: GitHub Actions
@@ -190,6 +193,15 @@ cp .env.example .env
 ### Optional (supported by code with fallback defaults)
 
 - `PASSWORD_RESET_TOKEN_TTL_MINUTES` (default behavior in service is `15`)
+- `REDIS_URL` (example: `redis://localhost:6379`)
+- `CACHE_TTL_MS` (example: `60000`)
+- `BULLMQ_PREFIX` (optional key prefix for BullMQ)
+- `S3_ENDPOINT` (example: `localhost`)
+- `S3_PORT` (example: `9000`)
+- `S3_USE_SSL` (example: `false`)
+- `S3_ACCESS_KEY` (example: `minioadmin`)
+- `S3_SECRET_KEY` (example: `minioadmin`)
+- `S3_BUCKET` (example: `template-bucket`)
 
 ### Security notes
 
@@ -224,7 +236,15 @@ bun run db:migrate:run
 bun run db:seed
 ```
 
-### 5) Start development server
+### 5) Start supporting services (Postgres/Redis/MinIO)
+
+If you’re using the provided `docker-compose.yml`:
+
+```bash
+docker compose up -d dev-db redis minio minio-init
+```
+
+### 6) Start development server
 
 ```bash
 bun run start:dev
