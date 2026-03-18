@@ -16,3 +16,5 @@ export interface AuthTokens {
 	accessToken: string;
 	refreshToken?: string;
 }
+
+export * from 'src/types/authenticated-user.type';

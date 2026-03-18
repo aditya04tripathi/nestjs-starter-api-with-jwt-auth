@@ -1,27 +1,32 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthSigninDto, AuthSignupDto, ChangePasswordDto, ForgotPasswordDto } from 'src/auth/dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { User } from '@prisma/client';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'src/user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { AuthenticatedUser } from 'src/types';
+import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private config: ConfigService,
-		private prisma: PrismaService,
 		private jwt: JwtService,
+		private readonly pubSubService: PubSubService,
+		@InjectRepository(UserEntity)
+		private readonly usersRepository: Repository<UserEntity>,
 	) {}
 
 	async signin(dto: AuthSigninDto) {
 		const { email, password } = dto;
 
-		const user = await this.prisma.user.findUnique({
-			where: {
-				email,
-			},
-		});
+		const user = await this.usersRepository
+			.createQueryBuilder('user')
+			.addSelect('user.hashedPassword')
+			.where('user.email = :email', { email })
+			.getOne();
 
 		if (!user) {
 			throw new HttpException(
@@ -46,13 +51,28 @@ export class AuthService {
 	async signup(dto: AuthSignupDto) {
 		const hashedPassword = await argon.hash(dto.password);
 
-		await this.prisma.user.create({
-			data: {
+		try {
+			const user = this.usersRepository.create({
 				email: dto.email,
-				hashedPassword: hashedPassword,
+				hashedPassword,
 				name: dto.name,
-			},
-		});
+			});
+			await this.usersRepository.save(user);
+			this.pubSubService.publish('user.created', {
+				id: user.id,
+				email: user.email,
+				name: user.name,
+			});
+		} catch (error: unknown) {
+			const code = typeof error === 'object' && error !== null ? (error as { code?: string }).code : undefined;
+			if (code === '23505') {
+				throw new HttpException(
+					`The user with ${dto.email} already exists. Please sign in.`,
+					HttpStatus.CONFLICT,
+				);
+			}
+			throw error;
+		}
 
 		return {
 			message: 'A new user has been created successfully. Enjoy your time on TemplateAPI!',
@@ -73,15 +93,12 @@ export class AuthService {
 		};
 	}
 
-	async getMe(user: User) {
+	async getMe(user: AuthenticatedUser) {
 		const userId = user.id;
 
-		const userData = await this.prisma.user.findUnique({
+		const userData = await this.usersRepository.findOne({
 			where: {
 				id: userId,
-			},
-			select: {
-				hashedPassword: false,
 			},
 		});
 
@@ -95,9 +112,11 @@ export class AuthService {
 	async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
 		const { currentPassword, newPassword } = changePasswordDto;
 
-		const user = await this.prisma.user.findUnique({
-			where: { id: userId },
-		});
+		const user = await this.usersRepository
+			.createQueryBuilder('user')
+			.addSelect('user.hashedPassword')
+			.where('user.id = :id', { id: userId })
+			.getOne();
 
 		if (!user) {
 			throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -110,10 +129,13 @@ export class AuthService {
 
 		const hashedNewPassword = await argon.hash(newPassword);
 
-		await this.prisma.user.update({
-			where: { id: userId },
-			data: { hashedPassword: hashedNewPassword },
-		});
+		await this.usersRepository.update(
+			{ id: userId },
+			{
+				hashedPassword: hashedNewPassword,
+			},
+		);
+		this.pubSubService.publish('user.password_changed', { userId });
 
 		return { message: 'Password changed successfully' };
 	}
@@ -121,17 +143,14 @@ export class AuthService {
 	async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
 		const { email } = forgotPasswordDto;
 
-		const user = await this.prisma.user.findUnique({
+		const user = await this.usersRepository.findOne({
 			where: { email },
 		});
 
 		if (!user) {
-			// Don't reveal if the email exists or not for security
 			return { message: 'If the email exists, a password reset link has been sent' };
 		}
 
-		// Here you would typically send an email with a reset token
-		// For now, just return a success message
 		return { message: 'If the email exists, a password reset link has been sent' };
 	}
 }

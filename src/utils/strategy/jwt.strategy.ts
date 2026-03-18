@@ -2,13 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'src/user/entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
 	constructor(
 		config: ConfigService,
-		private readonly prisma: PrismaService,
+		@InjectRepository(UserEntity)
+		private readonly usersRepository: Repository<UserEntity>,
 	) {
 		super({
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -17,13 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 	}
 
 	async validate(payload: { sub: string; email: string; iat: number }) {
-		const user = await this.prisma.user.findUnique({
+		return this.usersRepository.findOne({
 			where: {
 				id: payload.sub,
 			},
 		});
-		// @ts-expect-error password_hash is not optional
-		delete user?.password_hash;
-		return user;
 	}
 }

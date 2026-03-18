@@ -3,7 +3,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { AuthSignupDto, AuthSigninDto, ChangePasswordDto, ForgotPasswordDto } from 'src/auth/dto';
 import { JwtGuard } from 'src/utils/guards';
 import { GetUser, GetUserId, Public } from 'src/utils/decorator';
-import { User } from '@prisma/client';
+import { AuthenticatedUser } from 'src/types';
 
 @Controller('auth')
 export class AuthController {
@@ -23,7 +23,7 @@ export class AuthController {
 
 	@UseGuards(JwtGuard)
 	@Get('me')
-	getMe(@GetUser() user: User) {
+	getMe(@GetUser() user: AuthenticatedUser) {
 		return this.authService.getMe(user);
 	}
 
