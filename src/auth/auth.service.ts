@@ -36,7 +36,13 @@ export class AuthService {
 			);
 		}
 
-		const passwordMatches = await argon.verify(user.hashedPassword!, password);
+		if (!user.hashedPassword) {
+			throw new HttpException(
+				'The password entered seems to be invalid. Please try again.',
+				HttpStatus.UNAUTHORIZED,
+			);
+		}
+		const passwordMatches = await argon.verify(user.hashedPassword, password);
 		if (!passwordMatches) {
 			throw new HttpException(
 				'The password entered seems to be invalid. Please try again.',
@@ -124,7 +130,11 @@ export class AuthService {
 			throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 		}
 
-		const passwordMatches = await argon.verify(user.hashedPassword!, currentPassword);
+		if (!user.hashedPassword) {
+			throw new HttpException('Current password is incorrect', HttpStatus.UNAUTHORIZED);
+		}
+		const passwordMatches = await argon.verify(user.hashedPassword, currentPassword);
+
 		if (!passwordMatches) {
 			throw new HttpException('Current password is incorrect', HttpStatus.UNAUTHORIZED);
 		}
@@ -150,9 +160,12 @@ export class AuthService {
 		}
 		const rawToken = randomUUID();
 		const passwordResetTokenHash = await argon.hash(rawToken);
-		const passwordResetWindowMinutes = Number(
-			this.config.get<string>('PASSWORD_RESET_TOKEN_TTL_MINUTES') ?? 15,
-		);
+		const passwordResetTtlConfig = this.config.get<string>('PASSWORD_RESET_TOKEN_TTL_MINUTES');
+		let passwordResetWindowMinutes = Number(passwordResetTtlConfig);
+		if (!Number.isFinite(passwordResetWindowMinutes) || passwordResetWindowMinutes <= 0) {
+			passwordResetWindowMinutes = 15;
+		}
+
 		const passwordResetTokenExpiresAt = new Date(
 			Date.now() + passwordResetWindowMinutes * 60 * 1000,
 		);
