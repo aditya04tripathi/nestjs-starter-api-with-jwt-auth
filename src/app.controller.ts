@@ -13,7 +13,7 @@ import {
 } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { Public } from 'src/utils/decorator';
+import { Private } from 'src/utils/decorator';
 
 @ApiTags('App')
 @Controller()
@@ -21,6 +21,7 @@ export class AppController {
 	constructor(private readonly appService: AppService) {}
 
 	@Post('/upload')
+	@Private()
 	@ApiBearerAuth()
 	@ApiOperation({ summary: 'Upload a file' })
 	@ApiConsumes('multipart/form-data')
@@ -69,7 +70,6 @@ export class AppController {
 	}
 
 	@Get()
-	@Public()
 	@ApiOperation({ summary: 'Root endpoint' })
 	@ApiOkResponse({
 		description: 'Service greeting',

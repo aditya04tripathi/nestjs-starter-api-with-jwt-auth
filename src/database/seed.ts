@@ -1,6 +1,7 @@
 import * as argon from 'argon2';
 import dataSource from 'src/database/data-source';
 import { UserEntity } from 'src/user/entities/user.entity';
+import { Role } from 'src/types/role.enum';
 
 async function seed(): Promise<void> {
 	await dataSource.initialize();
@@ -18,6 +19,7 @@ async function seed(): Promise<void> {
 				email: 'admin@example.com',
 				name: 'Admin User',
 				hashedPassword: await argon.hash('Password123!'),
+				roles: [Role.ADMIN],
 			});
 			await usersRepository.save(user);
 		}

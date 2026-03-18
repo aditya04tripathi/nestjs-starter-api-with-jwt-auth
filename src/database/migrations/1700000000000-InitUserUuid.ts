@@ -26,6 +26,7 @@ export class InitUserUuid1700000000000 implements MigrationInterface {
             ALTER TABLE "User" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();
           END IF;
           ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "refreshTokenHash" character varying;
+          ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "roles" text[] NOT NULL DEFAULT ARRAY['USER']::text[];
           ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordResetTokenHash" character varying;
           ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordResetTokenExpiresAt" TIMESTAMPTZ;
           ALTER TABLE "User" ALTER COLUMN "name" TYPE character varying(191);
@@ -36,6 +37,7 @@ export class InitUserUuid1700000000000 implements MigrationInterface {
             "id" uuid NOT NULL DEFAULT gen_random_uuid(),
             "name" character varying(191) NOT NULL,
             "email" character varying(191) NOT NULL,
+            "roles" text[] NOT NULL DEFAULT ARRAY['USER']::text[],
             "hashedPassword" character varying,
             "refreshTokenHash" character varying,
             "passwordResetTokenHash" character varying,

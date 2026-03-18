@@ -484,6 +484,7 @@ describe('AuthService', () => {
 			id: 'user-123',
 			email: 'user@example.com',
 			name: 'User',
+			roles: ['USER'],
 		} as never);
 		jest
 			.spyOn(argon, 'hash')
@@ -504,6 +505,7 @@ describe('AuthService', () => {
 				email: 'user@example.com',
 				name: 'User',
 				hashedPassword: 'hashed-password',
+				roles: expect.any(Array),
 			},
 		]);
 		expect(pubSubService.publish.mock.calls).toContainEqual([

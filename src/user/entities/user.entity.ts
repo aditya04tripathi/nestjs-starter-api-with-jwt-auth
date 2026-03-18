@@ -1,6 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Role } from 'src/types/role.enum';
 
-const resetTokenExpiresAtType = process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const isSqlJsLike = !process.env.DATABASE_URL;
 
 @Entity({ name: 'User' })
 export class UserEntity {
@@ -13,6 +14,13 @@ export class UserEntity {
 	@Column({ type: 'varchar', unique: true, length: 191 })
 	email: string;
 
+	@Column({
+		type: isSqlJsLike ? 'simple-json' : 'text',
+		array: (isSqlJsLike ? undefined : true) as never,
+		default: isSqlJsLike ? '["USER"]' : () => "ARRAY['USER']::text[]",
+	})
+	roles: Role[];
+
 	@Column({ type: 'varchar', nullable: true, select: false })
 	hashedPassword: string | null;
 
@@ -22,6 +30,6 @@ export class UserEntity {
 	@Column({ type: 'varchar', nullable: true, select: false })
 	passwordResetTokenHash: string | null;
 
-	@Column({ type: resetTokenExpiresAtType, nullable: true, select: false })
+	@Column({ type: isSqlJsLike ? 'datetime' : 'timestamptz', nullable: true, select: false })
 	passwordResetTokenExpiresAt: Date | null;
 }

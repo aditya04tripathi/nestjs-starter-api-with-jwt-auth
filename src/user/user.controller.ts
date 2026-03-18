@@ -11,7 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { UserService } from 'src/user/user.service';
 import { UpdateUserDto } from 'src/user/dto';
-import { GetUserId } from 'src/utils/decorator';
+import { GetUserId, Private } from 'src/utils/decorator';
 import { UserProfileDto } from 'src/types';
 import { JwtGuard } from 'src/utils/guards';
 
@@ -24,6 +24,7 @@ export class UserController {
 	constructor(private readonly userService: UserService) {}
 
 	@Get('profile')
+	@Private()
 	@ApiOperation({ summary: 'Get authenticated user profile' })
 	@ApiOkResponse({
 		description: 'Profile fetched successfully',
@@ -40,6 +41,7 @@ export class UserController {
 	}
 
 	@Patch('profile')
+	@Private()
 	@ApiOperation({ summary: 'Update authenticated user profile' })
 	@ApiBody({ type: UpdateUserDto })
 	@ApiOkResponse({

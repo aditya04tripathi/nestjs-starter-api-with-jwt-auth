@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-const createdAtColumnType = process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamptz';
+const createdAtColumnType = !process.env.DATABASE_URL ? 'datetime' : 'timestamptz';
 
 @Entity({ name: 'AuditLog' })
 export class AuditLogEntity {
