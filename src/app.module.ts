@@ -17,6 +17,11 @@ import { HealthModule } from 'src/health/health.module';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
 import { RequestLoggerMiddleware } from 'src/common/middleware/request-logger.middleware';
 import { AuditModule } from 'src/audit/audit.module';
+import { AppCacheModule } from 'src/cache/cache.module';
+import { StorageModule } from 'src/storage/storage.module';
+import { QueueModule } from 'src/queue/queue.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from 'src/tasks/tasks.module';
 
 @Module({
 	imports: [
@@ -51,6 +56,7 @@ import { AuditModule } from 'src/audit/audit.module';
 				},
 			],
 		}),
+		ScheduleModule.forRoot(),
 		JwtModule.register({}),
 		AuthModule,
 		CommonModule,
@@ -58,6 +64,10 @@ import { AuditModule } from 'src/audit/audit.module';
 		RealtimeModule,
 		HealthModule,
 		AuditModule,
+		AppCacheModule,
+		StorageModule,
+		QueueModule,
+		TasksModule,
 	],
 	controllers: [AppController],
 	providers: [
