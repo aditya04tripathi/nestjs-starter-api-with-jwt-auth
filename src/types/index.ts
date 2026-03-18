@@ -13,6 +13,8 @@ export interface JwtPayload {
 }
 
 export interface AuthTokens {
-	accessToken: string;
-	refreshToken?: string;
+	access_token: string;
+	refresh_token: string;
 }
+
+export * from 'src/types/authenticated-user.type';

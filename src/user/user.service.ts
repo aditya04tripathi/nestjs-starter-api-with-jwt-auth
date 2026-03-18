@@ -1,31 +1,30 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Inject, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from 'src/user/dto';
+import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
+import { UserRepository, USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
 
 @Injectable()
 export class UserService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		@Inject(USER_REPOSITORY)
+		private readonly usersRepository: UserRepository,
+		private readonly pubSubService: PubSubService,
+	) {}
 
 	async findById(id: string) {
-		return this.prisma.user.findUnique({
-			where: { id },
-			select: {
-				id: true,
-				email: true,
-				name: true,
-			},
-		});
+		return this.usersRepository.findById(id);
 	}
 
 	async updateUser(id: string, updateUserDto: UpdateUserDto) {
-		return this.prisma.user.update({
-			where: { id },
-			data: updateUserDto,
-			select: {
-				id: true,
-				email: true,
-				name: true,
-			},
-		});
+		await this.usersRepository.updateById(id, updateUserDto);
+		const user = await this.usersRepository.findById(id);
+		if (user) {
+			this.pubSubService.publish('user.updated', {
+				id: user.id,
+				email: user.email,
+				name: user.name,
+			});
+		}
+		return user;
 	}
 }

@@ -7,10 +7,23 @@ import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 	const configService = app.get(ConfigService);
+	const configuredOrigins = configService.get<string>('CORS_ORIGIN');
+	const defaultOrigins =
+		configService.get<string>('NODE_ENV') === 'production'
+			? []
+			: ['http://localhost:3000', 'http://127.0.0.1:3000'];
+	const origins = configuredOrigins
+		? configuredOrigins
+				.split(',')
+				.map((origin) => origin.trim())
+				.filter(Boolean)
+		: defaultOrigins;
 
 	app.enableCors({
-		origin: configService.get('CORS_ORIGIN') || 'http://localhost:3000',
+		origin: origins,
 		credentials: true,
+		methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+		allowedHeaders: ['Authorization', 'Content-Type', 'Accept', 'Origin'],
 	});
 
 	app.useGlobalPipes(
