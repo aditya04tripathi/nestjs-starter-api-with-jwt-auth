@@ -1,17 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { UserEntity } from '../user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PubSubService } from '../realtime/pubsub/pubsub.service';
-import { Repository } from 'typeorm';
 import { HttpException } from '@nestjs/common';
 import * as argon from 'argon2';
+import { USER_REPOSITORY, UserRepository } from '../user/repositories/user-repository.port';
 
 describe('AuthService', () => {
 	let service: AuthService;
-	let repository: jest.Mocked<Repository<UserEntity>>;
+	let repository: jest.Mocked<UserRepository>;
 	let jwtService: jest.Mocked<JwtService>;
 
 	beforeEach(async () => {
@@ -19,13 +17,14 @@ describe('AuthService', () => {
 			providers: [
 				AuthService,
 				{
-					provide: getRepositoryToken(UserEntity),
+					provide: USER_REPOSITORY,
 					useValue: {
-						createQueryBuilder: jest.fn(),
-						findOne: jest.fn(),
-						create: jest.fn(),
-						save: jest.fn(),
-						update: jest.fn(),
+						findById: jest.fn(),
+						findByEmail: jest.fn(),
+						findByIdWithSecrets: jest.fn(),
+						findByEmailWithSecrets: jest.fn(),
+						createUser: jest.fn(),
+						updateById: jest.fn(),
 					},
 				},
 				{
@@ -57,7 +56,7 @@ describe('AuthService', () => {
 		}).compile();
 
 		service = module.get<AuthService>(AuthService);
-		repository = module.get(getRepositoryToken(UserEntity));
+		repository = module.get(USER_REPOSITORY);
 		jwtService = module.get(JwtService);
 	});
 
@@ -66,12 +65,7 @@ describe('AuthService', () => {
 	});
 
 	it('throws when signing in with unknown email', async () => {
-		const getOne = jest.fn().mockResolvedValue(null);
-		repository.createQueryBuilder.mockReturnValue({
-			addSelect: jest.fn().mockReturnThis(),
-			where: jest.fn().mockReturnThis(),
-			getOne,
-		} as never);
+		repository.findByEmailWithSecrets.mockResolvedValue(null);
 
 		await expect(
 			service.signin({
@@ -87,28 +81,23 @@ describe('AuthService', () => {
 			sub: 'user-123',
 			email: 'user@example.com',
 		} as never);
-		const getOne = jest.fn().mockResolvedValue({
+		repository.findByIdWithSecrets.mockResolvedValue({
 			id: 'user-123',
 			email: 'user@example.com',
 			refreshTokenHash: 'hash',
-		});
-		repository.createQueryBuilder.mockReturnValue({
-			addSelect: jest.fn().mockReturnThis(),
-			where: jest.fn().mockReturnThis(),
-			getOne,
 		} as never);
 		const signAsyncMock = (jwtService as unknown as { signAsync: jest.Mock }).signAsync;
 		signAsyncMock.mockResolvedValueOnce('access-token').mockResolvedValueOnce('refresh-token');
 
 		const result = await service.refreshToken('refresh-token');
-		const updateMock = (repository as unknown as { update: jest.Mock }).update;
+		const updateMock = (repository as unknown as { updateById: jest.Mock }).updateById;
 
 		expect(result).toEqual({
 			access_token: 'access-token',
 			refresh_token: 'refresh-token',
 		});
 		expect(updateMock).toHaveBeenCalledWith(
-			{ id: 'user-123' },
+			'user-123',
 			expect.objectContaining({
 				refreshTokenHash: expect.any(String),
 			}),

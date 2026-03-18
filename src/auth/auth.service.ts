@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import {
 	AuthSigninDto,
 	AuthSignupDto,
@@ -9,12 +9,10 @@ import {
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
 import { AuthenticatedUser } from 'src/types';
 import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
 import { randomUUID } from 'node:crypto';
+import { UserRepository, USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
 
 @Injectable()
 export class AuthService {
@@ -22,18 +20,14 @@ export class AuthService {
 		private config: ConfigService,
 		private jwt: JwtService,
 		private readonly pubSubService: PubSubService,
-		@InjectRepository(UserEntity)
-		private readonly usersRepository: Repository<UserEntity>,
+		@Inject(USER_REPOSITORY)
+		private readonly usersRepository: UserRepository,
 	) {}
 
 	async signin(dto: AuthSigninDto) {
 		const { email, password } = dto;
 
-		const user = await this.usersRepository
-			.createQueryBuilder('user')
-			.addSelect('user.hashedPassword')
-			.where('user.email = :email', { email })
-			.getOne();
+		const user = await this.usersRepository.findByEmailWithSecrets(email);
 
 		if (!user) {
 			throw new HttpException(
@@ -57,12 +51,11 @@ export class AuthService {
 		const hashedPassword = await argon.hash(dto.password);
 
 		try {
-			const user = this.usersRepository.create({
+			const user = await this.usersRepository.createUser({
 				email: dto.email,
 				hashedPassword,
 				name: dto.name,
 			});
-			await this.usersRepository.save(user);
 			this.pubSubService.publish('user.created', {
 				id: user.id,
 				email: user.email,
@@ -113,11 +106,7 @@ export class AuthService {
 	async getMe(user: AuthenticatedUser) {
 		const userId = user.id;
 
-		const userData = await this.usersRepository.findOne({
-			where: {
-				id: userId,
-			},
-		});
+		const userData = await this.usersRepository.findById(userId);
 
 		if (!userData) {
 			throw new HttpException('The user was not found. Please sign up.', HttpStatus.NOT_FOUND);
@@ -129,11 +118,7 @@ export class AuthService {
 	async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
 		const { currentPassword, newPassword } = changePasswordDto;
 
-		const user = await this.usersRepository
-			.createQueryBuilder('user')
-			.addSelect('user.hashedPassword')
-			.where('user.id = :id', { id: userId })
-			.getOne();
+		const user = await this.usersRepository.findByIdWithSecrets(userId);
 
 		if (!user) {
 			throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -146,13 +131,10 @@ export class AuthService {
 
 		const hashedNewPassword = await argon.hash(newPassword);
 
-		await this.usersRepository.update(
-			{ id: userId },
-			{
-				hashedPassword: hashedNewPassword,
-				refreshTokenHash: null,
-			},
-		);
+		await this.usersRepository.updateById(userId, {
+			hashedPassword: hashedNewPassword,
+			refreshTokenHash: null,
+		});
 		this.pubSubService.publish('user.password_changed', { userId });
 
 		return { message: 'Password changed successfully' };
@@ -161,9 +143,7 @@ export class AuthService {
 	async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
 		const { email } = forgotPasswordDto;
 
-		const user = await this.usersRepository.findOne({
-			where: { email },
-		});
+		const user = await this.usersRepository.findByEmail(email);
 
 		if (!user) {
 			return { message: 'If the email exists, a password reset link has been sent' };
@@ -176,13 +156,10 @@ export class AuthService {
 		const passwordResetTokenExpiresAt = new Date(
 			Date.now() + passwordResetWindowMinutes * 60 * 1000,
 		);
-		await this.usersRepository.update(
-			{ id: user.id },
-			{
-				passwordResetTokenHash,
-				passwordResetTokenExpiresAt,
-			},
-		);
+		await this.usersRepository.updateById(user.id, {
+			passwordResetTokenHash,
+			passwordResetTokenExpiresAt,
+		});
 		this.pubSubService.publish('user.password_reset_requested', {
 			userId: user.id,
 			email: user.email,
@@ -207,11 +184,7 @@ export class AuthService {
 		} catch {
 			throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
 		}
-		const user = await this.usersRepository
-			.createQueryBuilder('user')
-			.addSelect('user.refreshTokenHash')
-			.where('user.id = :id', { id: payload.sub })
-			.getOne();
+		const user = await this.usersRepository.findByIdWithSecrets(payload.sub);
 		if (!user?.refreshTokenHash) {
 			throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
 		}
@@ -223,17 +196,12 @@ export class AuthService {
 	}
 
 	async logout(userId: string) {
-		await this.usersRepository.update({ id: userId }, { refreshTokenHash: null });
+		await this.usersRepository.updateById(userId, { refreshTokenHash: null });
 		return { message: 'Logged out successfully' };
 	}
 
 	async resetPassword(dto: ResetPasswordDto) {
-		const user = await this.usersRepository
-			.createQueryBuilder('user')
-			.addSelect('user.passwordResetTokenHash')
-			.addSelect('user.passwordResetTokenExpiresAt')
-			.where('user.email = :email', { email: dto.email })
-			.getOne();
+		const user = await this.usersRepository.findByEmailWithSecrets(dto.email);
 		if (!user?.passwordResetTokenHash || !user.passwordResetTokenExpiresAt) {
 			throw new HttpException('Invalid or expired reset token', HttpStatus.BAD_REQUEST);
 		}
@@ -245,15 +213,12 @@ export class AuthService {
 			throw new HttpException('Invalid or expired reset token', HttpStatus.BAD_REQUEST);
 		}
 		const hashedPassword = await argon.hash(dto.newPassword);
-		await this.usersRepository.update(
-			{ id: user.id },
-			{
-				hashedPassword,
-				passwordResetTokenHash: null,
-				passwordResetTokenExpiresAt: null,
-				refreshTokenHash: null,
-			},
-		);
+		await this.usersRepository.updateById(user.id, {
+			hashedPassword,
+			passwordResetTokenHash: null,
+			passwordResetTokenExpiresAt: null,
+			refreshTokenHash: null,
+		});
 		this.pubSubService.publish('user.password_reset_completed', {
 			userId: user.id,
 			email: user.email,
@@ -264,7 +229,7 @@ export class AuthService {
 	private async issueAndPersistTokens(userId: string, email: string) {
 		const tokens = await this.signToken(userId, email);
 		const refreshTokenHash = await argon.hash(tokens.refresh_token);
-		await this.usersRepository.update({ id: userId }, { refreshTokenHash });
+		await this.usersRepository.updateById(userId, { refreshTokenHash });
 		return tokens;
 	}
 }

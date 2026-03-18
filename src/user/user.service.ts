@@ -1,27 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UpdateUserDto } from 'src/user/dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
 import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
+import { UserRepository, USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
 
 @Injectable()
 export class UserService {
 	constructor(
-		@InjectRepository(UserEntity)
-		private readonly usersRepository: Repository<UserEntity>,
+		@Inject(USER_REPOSITORY)
+		private readonly usersRepository: UserRepository,
 		private readonly pubSubService: PubSubService,
 	) {}
 
 	async findById(id: string) {
-		return this.usersRepository.findOne({
-			where: { id },
-		});
+		return this.usersRepository.findById(id);
 	}
 
 	async updateUser(id: string, updateUserDto: UpdateUserDto) {
-		await this.usersRepository.update({ id }, updateUserDto);
-		const user = await this.usersRepository.findOne({ where: { id } });
+		await this.usersRepository.updateById(id, updateUserDto);
+		const user = await this.usersRepository.findById(id);
 		if (user) {
 			this.pubSubService.publish('user.updated', {
 				id: user.id,

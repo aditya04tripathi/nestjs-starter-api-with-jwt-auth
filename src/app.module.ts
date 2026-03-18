@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
 import { CommonModule } from 'src/common/common.module';
@@ -11,12 +11,12 @@ import { JwtGuard, RolesGuard } from 'src/utils/guards';
 import { GlobalExceptionFilter } from 'src/utils/filters';
 import { ResponseTransformInterceptor } from 'src/utils/interceptors';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { RealtimeModule } from 'src/realtime/realtime.module';
 import { HealthModule } from 'src/health/health.module';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id.middleware';
 import { RequestLoggerMiddleware } from 'src/common/middleware/request-logger.middleware';
+import { AuditModule } from 'src/audit/audit.module';
 
 @Module({
 	imports: [
@@ -25,12 +25,22 @@ import { RequestLoggerMiddleware } from 'src/common/middleware/request-logger.mi
 		}),
 		TypeOrmModule.forRootAsync({
 			inject: [ConfigService],
-			useFactory: (config: ConfigService) => ({
-				type: 'postgres',
-				url: config.get<string>('DATABASE_URL'),
-				autoLoadEntities: true,
-				synchronize: false,
-			}),
+			useFactory: (config: ConfigService) => {
+				const isTestEnvironment = config.get<string>('NODE_ENV') === 'test';
+				if (isTestEnvironment) {
+					return {
+						type: 'sqljs',
+						autoLoadEntities: true,
+						synchronize: true,
+					};
+				}
+				return {
+					type: 'postgres',
+					url: config.get<string>('DATABASE_URL'),
+					autoLoadEntities: true,
+					synchronize: false,
+				};
+			},
 		}),
 		ThrottlerModule.forRootAsync({
 			inject: [ConfigService],
@@ -47,6 +57,7 @@ import { RequestLoggerMiddleware } from 'src/common/middleware/request-logger.mi
 		UserModule,
 		RealtimeModule,
 		HealthModule,
+		AuditModule,
 	],
 	controllers: [AppController],
 	providers: [

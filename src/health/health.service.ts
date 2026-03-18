@@ -5,7 +5,15 @@ import { DataSource } from 'typeorm';
 export class HealthService {
 	constructor(private readonly dataSource: DataSource) {}
 
-	async getHealthStatus() {
+	getLivenessStatus() {
+		return {
+			status: 'ok',
+			service: 'live',
+			timestamp: new Date().toISOString(),
+		};
+	}
+
+	async getReadinessStatus() {
 		let database = 'down';
 		try {
 			await this.dataSource.query('SELECT 1');
@@ -15,7 +23,18 @@ export class HealthService {
 		}
 		return {
 			status: database === 'up' ? 'ok' : 'degraded',
+			service: 'ready',
 			database,
+			timestamp: new Date().toISOString(),
+		};
+	}
+
+	async getHealthStatus() {
+		const [live, ready] = await Promise.all([this.getLivenessStatus(), this.getReadinessStatus()]);
+		return {
+			status: ready.status === 'ok' ? 'ok' : 'degraded',
+			live,
+			ready,
 			timestamp: new Date().toISOString(),
 		};
 	}
