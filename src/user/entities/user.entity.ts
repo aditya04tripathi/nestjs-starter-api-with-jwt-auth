@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { Role } from 'src/types/role.enum';
 
-const isSqlJsLike = !process.env.DATABASE_URL;
+const isSqlJsLike = process.env.NODE_ENV === 'test';
 
 @Entity({ name: 'User' })
 export class UserEntity {
@@ -15,9 +15,9 @@ export class UserEntity {
 	email: string;
 
 	@Column({
-		type: isSqlJsLike ? 'simple-json' : 'text',
-		array: (isSqlJsLike ? undefined : true) as never,
-		default: isSqlJsLike ? '["USER"]' : () => "ARRAY['USER']::text[]",
+		type: 'simple-json',
+		array: true,
+		default: '["USER"]',
 	})
 	roles: Role[];
 

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import { UserEntity } from 'src/user/entities/user.entity';
-import { InitUserUuid1700000000000 } from 'src/database/migrations/1700000000000-InitUserUuid';
-import { AuditLogEntity } from 'src/audit/entities/audit-log.entity';
-import { CreateAuditLogTable1700000000001 } from 'src/database/migrations/1700000000001-CreateAuditLogTable';
+import { UserEntity } from '../user/entities/user.entity';
+import { AuditLogEntity } from '../audit/entities/audit-log.entity';
+import { InitUserUuid1700000000000 } from './migrations/1700000000000-InitUserUuid';
+import { CreateAuditLogTable1700000000001 } from './migrations/1700000000001-CreateAuditLogTable';
 
 export default new DataSource({
 	type: 'postgres',

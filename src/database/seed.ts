@@ -1,7 +1,7 @@
 import * as argon from 'argon2';
-import dataSource from 'src/database/data-source';
-import { UserEntity } from 'src/user/entities/user.entity';
-import { Role } from 'src/types/role.enum';
+import dataSource from './data-source';
+import { UserEntity } from '../user/entities/user.entity';
+import { Role } from '../types/role.enum';
 
 async function seed(): Promise<void> {
 	await dataSource.initialize();
