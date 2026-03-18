@@ -9,6 +9,7 @@ Single-source project documentation for an enterprise-ready NestJS backend start
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
+- [Local Infrastructure (Redis, MinIO, BullMQ)](#local-infrastructure-redis-minio-bullmq)
 - [Environment Variables](#environment-variables)
 - [Quick Start](#quick-start)
 - [Database and Migration Strategy](#database-and-migration-strategy)
@@ -35,6 +36,7 @@ This project is a backend starter built with NestJS and designed for production-
 - Health endpoints for live/ready checks
 - Request ID propagation and persisted audit logs
 - CI pipeline for lint/test/build enforcement
+- Local dev infrastructure for cache, queues, and object storage
 
 ## Enterprise Capabilities
 
@@ -54,6 +56,7 @@ This project is a backend starter built with NestJS and designed for production-
 - Endpoint-level tighter throttling on signin/forgot-password routes
 - Configurable CORS origins and allowed headers/methods
 - Secret-driven JWT configuration
+- Secure default HTTP headers via Helmet (`helmet`)
 
 ### Runtime reliability
 
@@ -119,6 +122,7 @@ This project is a backend starter built with NestJS and designed for production-
 - **Caching**: @nestjs/cache-manager (Keyv + Redis optional)
 - **Queues**: BullMQ (@nestjs/bullmq)
 - **Scheduling**: @nestjs/schedule
+- **Security headers**: helmet
 - **Runtime/package manager**: Bun
 - **Testing**: Jest + Supertest
 - **CI**: GitHub Actions
@@ -168,6 +172,23 @@ test/
 .github/workflows/ci.yml
 Dockerfile
 ```
+
+## Local Infrastructure (Redis, MinIO, BullMQ)
+
+This repo ships a local dev stack via `docker-compose.yml`:
+
+- **Postgres**: `localhost:5431` (container `dev-db`)
+- **Redis**: `localhost:6379` (container `redis`)
+- **MinIO (S3 API)**: `http://localhost:9000` (container `minio`)
+- **MinIO Console**: `http://localhost:9001` (container `minio`)
+
+Start everything:
+
+```bash
+docker compose up -d dev-db redis minio minio-init
+```
+
+The `minio-init` job creates the default bucket `template-bucket`.
 
 ## Environment Variables
 
@@ -224,24 +245,24 @@ bun install
 cp .env.example .env
 ```
 
-### 3) Run migrations
-
-```bash
-bun run db:migrate:run
-```
-
-### 4) Seed initial data
-
-```bash
-bun run db:seed
-```
-
-### 5) Start supporting services (Postgres/Redis/MinIO)
+### 3) Start supporting services (Postgres/Redis/MinIO)
 
 If you’re using the provided `docker-compose.yml`:
 
 ```bash
 docker compose up -d dev-db redis minio minio-init
+```
+
+### 4) Run migrations
+
+```bash
+bun run db:migrate:run
+```
+
+### 5) Seed initial data
+
+```bash
+bun run db:seed
 ```
 
 ### 6) Start development server
@@ -479,6 +500,10 @@ The seed script creates `admin@example.com` with `Role.ADMIN`.
   - `/auth/forgot-password` stricter limit
 - CORS origins are split from comma-separated `CORS_ORIGIN`.
 
+### Helmet
+
+Helmet is enabled globally in `main.ts` and sets a collection of security-related HTTP headers.
+
 ## Realtime WebSocket and PubSub
 
 ### Namespace and auth
@@ -672,3 +697,43 @@ bun run build
 - Add metrics/tracing integration (OpenTelemetry/Prometheus).
 - Expand unit/integration/e2e coverage across auth edge cases and realtime behavior.
 - Add CI security steps (`npm audit`/SCA) and release workflow.
+
+## Recipes
+
+### Cache usage
+
+Inject `CacheService` and use typed `get/set/del`:
+
+```ts
+import { CacheService } from 'src/cache/cache.service';
+
+constructor(private readonly cache: CacheService) {}
+
+await this.cache.set('key', { ok: true }, 30_000);
+const value = await this.cache.get<{ ok: boolean }>('key');
+await this.cache.del('key');
+```
+
+### Enqueue a BullMQ job
+
+```ts
+import { QueueService } from 'src/queue/queue.service';
+
+constructor(private readonly queue: QueueService) {}
+
+await this.queue.enqueue('my-job', { userId: '...' });
+```
+
+### Upload to MinIO (S3-compatible)
+
+```ts
+import { StorageService } from 'src/storage/storage.service';
+
+constructor(private readonly storage: StorageService) {}
+
+await this.storage.putObject({
+  key: 'uploads/hello.txt',
+  contentType: 'text/plain',
+  body: Buffer.from('hello'),
+});
+```
