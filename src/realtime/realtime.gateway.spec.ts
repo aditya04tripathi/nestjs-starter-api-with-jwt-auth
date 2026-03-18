@@ -45,7 +45,7 @@ describe('RealtimeGateway', () => {
 	it('subscribes to pubsub events and relays them', () => {
 		gateway.afterInit();
 
-		expect(pubSubService.subscribe).toHaveBeenCalledTimes(3);
+		expect(pubSubService.subscribe.mock.calls).toHaveLength(3);
 		listenerMap['user.created']({ id: '1', name: 'A', email: 'a@example.com' });
 		expect(serverEmit).toHaveBeenCalledWith('user.created', {
 			id: '1',
@@ -89,7 +89,7 @@ describe('RealtimeGateway', () => {
 
 		await gateway.handleConnection(client);
 
-		expect(jwtService.verifyAsync).toHaveBeenCalledWith('valid-token');
+		expect(jwtService.verifyAsync.mock.calls).toContainEqual(['valid-token']);
 		expect(client.join).toHaveBeenCalledWith('user:user-123');
 		expect(client.disconnect).not.toHaveBeenCalled();
 	});
@@ -107,7 +107,7 @@ describe('RealtimeGateway', () => {
 
 		await gateway.handleConnection(client);
 
-		expect(jwtService.verifyAsync).toHaveBeenCalledWith('header-token');
+		expect(jwtService.verifyAsync.mock.calls).toContainEqual(['header-token']);
 		expect(client.join).toHaveBeenCalledWith('user:user-123');
 	});
 

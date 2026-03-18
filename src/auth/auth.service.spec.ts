@@ -137,9 +137,10 @@ describe('AuthService', () => {
 			access_token: 'access-token',
 			refresh_token: 'refresh-token',
 		});
-		expect(repository.updateById).toHaveBeenCalledWith('user-123', {
-			refreshTokenHash: 'refresh-hash',
-		});
+		expect(repository.updateById.mock.calls).toContainEqual([
+			'user-123',
+			{ refreshTokenHash: 'refresh-hash' },
+		]);
 	});
 
 	it('throws when JWT secret is missing while signing token', async () => {
@@ -320,13 +321,17 @@ describe('AuthService', () => {
 		});
 
 		expect(result).toEqual({ message: 'Password changed successfully' });
-		expect(repository.updateById).toHaveBeenCalledWith('user-123', {
-			hashedPassword: 'new-hash',
-			refreshTokenHash: null,
-		});
-		expect(pubSubService.publish).toHaveBeenCalledWith('user.password_changed', {
-			userId: 'user-123',
-		});
+		expect(repository.updateById.mock.calls).toContainEqual([
+			'user-123',
+			{
+				hashedPassword: 'new-hash',
+				refreshTokenHash: null,
+			},
+		]);
+		expect(pubSubService.publish.mock.calls).toContainEqual([
+			'user.password_changed',
+			{ userId: 'user-123' },
+		]);
 	});
 
 	it('returns generic response for unknown forgotPassword email', async () => {
@@ -337,8 +342,8 @@ describe('AuthService', () => {
 		expect(result).toEqual({
 			message: 'If the email exists, a password reset link has been sent',
 		});
-		expect(repository.updateById).not.toHaveBeenCalled();
-		expect(pubSubService.publish).not.toHaveBeenCalled();
+		expect(repository.updateById.mock.calls).toHaveLength(0);
+		expect(pubSubService.publish.mock.calls).toHaveLength(0);
 	});
 
 	it('stores reset token and publishes event for forgotPassword', async () => {
@@ -353,14 +358,14 @@ describe('AuthService', () => {
 		expect(result).toEqual({
 			message: 'If the email exists, a password reset link has been sent',
 		});
-		expect(repository.updateById).toHaveBeenCalledWith(
+		expect(repository.updateById.mock.calls[0]).toEqual([
 			'user-123',
 			expect.objectContaining({
 				passwordResetTokenHash: 'reset-hash',
 				passwordResetTokenExpiresAt: expect.any(Date),
 			}),
-		);
-		expect(pubSubService.publish).toHaveBeenCalledWith(
+		]);
+		expect(pubSubService.publish.mock.calls[0]).toEqual([
 			'user.password_reset_requested',
 			expect.objectContaining({
 				userId: 'user-123',
@@ -368,7 +373,7 @@ describe('AuthService', () => {
 				token: expect.any(String),
 				expiresAt: expect.any(String),
 			}),
-		);
+		]);
 	});
 
 	it('throws on resetPassword when token metadata is missing', async () => {
@@ -446,23 +451,32 @@ describe('AuthService', () => {
 		});
 
 		expect(result).toEqual({ message: 'Password reset successful' });
-		expect(repository.updateById).toHaveBeenCalledWith('user-123', {
-			hashedPassword: 'new-password-hash',
-			passwordResetTokenHash: null,
-			passwordResetTokenExpiresAt: null,
-			refreshTokenHash: null,
-		});
-		expect(pubSubService.publish).toHaveBeenCalledWith('user.password_reset_completed', {
-			userId: 'user-123',
-			email: 'user@example.com',
-		});
+		expect(repository.updateById.mock.calls).toContainEqual([
+			'user-123',
+			{
+				hashedPassword: 'new-password-hash',
+				passwordResetTokenHash: null,
+				passwordResetTokenExpiresAt: null,
+				refreshTokenHash: null,
+			},
+		]);
+		expect(pubSubService.publish.mock.calls).toContainEqual([
+			'user.password_reset_completed',
+			{
+				userId: 'user-123',
+				email: 'user@example.com',
+			},
+		]);
 	});
 
 	it('clears refresh token hash on logout', async () => {
 		const result = await service.logout('user-123');
 
 		expect(result).toEqual({ message: 'Logged out successfully' });
-		expect(repository.updateById).toHaveBeenCalledWith('user-123', { refreshTokenHash: null });
+		expect(repository.updateById.mock.calls).toContainEqual([
+			'user-123',
+			{ refreshTokenHash: null },
+		]);
 	});
 
 	it('creates user and returns tokens on signup', async () => {
@@ -485,16 +499,21 @@ describe('AuthService', () => {
 			password: 'Password123!',
 		});
 
-		expect(repository.createUser).toHaveBeenCalledWith({
-			email: 'user@example.com',
-			name: 'User',
-			hashedPassword: 'hashed-password',
-		});
-		expect(pubSubService.publish).toHaveBeenCalledWith('user.created', {
-			id: 'user-123',
-			email: 'user@example.com',
-			name: 'User',
-		});
+		expect(repository.createUser.mock.calls).toContainEqual([
+			{
+				email: 'user@example.com',
+				name: 'User',
+				hashedPassword: 'hashed-password',
+			},
+		]);
+		expect(pubSubService.publish.mock.calls).toContainEqual([
+			'user.created',
+			{
+				id: 'user-123',
+				email: 'user@example.com',
+				name: 'User',
+			},
+		]);
 		expect(result).toEqual({
 			access_token: 'access-token',
 			refresh_token: 'refresh-token',
