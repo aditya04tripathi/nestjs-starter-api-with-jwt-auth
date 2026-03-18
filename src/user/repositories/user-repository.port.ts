@@ -7,6 +7,8 @@ export interface UserRepository {
 	findByEmail(email: string): Promise<UserEntity | null>;
 	findByIdWithSecrets(id: string): Promise<UserEntity | null>;
 	findByEmailWithSecrets(email: string): Promise<UserEntity | null>;
-	createUser(data: Pick<UserEntity, 'name' | 'email' | 'hashedPassword'>): Promise<UserEntity>;
+	createUser(
+		data: Pick<UserEntity, 'name' | 'email' | 'hashedPassword' | 'roles'>,
+	): Promise<UserEntity>;
 	updateById(id: string, data: Partial<UserEntity>): Promise<void>;
 }

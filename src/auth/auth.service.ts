@@ -14,6 +14,7 @@ import { PubSubService } from 'src/realtime/pubsub/pubsub.service';
 import { randomUUID } from 'node:crypto';
 import { USER_REPOSITORY } from 'src/user/repositories/user-repository.port';
 import type { UserRepository } from 'src/user/repositories/user-repository.port';
+import { Role } from 'src/types/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -62,6 +63,7 @@ export class AuthService {
 				email: dto.email,
 				hashedPassword,
 				name: dto.name,
+				roles: [Role.USER],
 			});
 			this.pubSubService.publish('user.created', {
 				id: user.id,

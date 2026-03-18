@@ -1,6 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/utils/decorator';
 import { HealthService } from 'src/health/health.service';
 
 @ApiTags('Health')
@@ -8,7 +7,6 @@ import { HealthService } from 'src/health/health.service';
 export class HealthController {
 	constructor(private readonly healthService: HealthService) {}
 
-	@Public()
 	@Get()
 	@ApiOperation({ summary: 'Get aggregate service health status' })
 	@ApiOkResponse({
@@ -32,7 +30,6 @@ export class HealthController {
 		return this.healthService.getHealthStatus();
 	}
 
-	@Public()
 	@Get('live')
 	@ApiOperation({ summary: 'Liveness probe' })
 	@ApiOkResponse({
@@ -55,7 +52,6 @@ export class HealthController {
 		return this.healthService.getLivenessStatus();
 	}
 
-	@Public()
 	@Get('ready')
 	@ApiOperation({ summary: 'Readiness probe including database check' })
 	@ApiOkResponse({

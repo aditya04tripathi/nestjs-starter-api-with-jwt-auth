@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+export * from 'src/types/role.enum';
 
 export interface User {
 	id: string;
@@ -19,10 +20,17 @@ export interface AuthTokens {
 	refresh_token: string;
 }
 
+export enum Role {
+	USER = 'USER',
+	ADMIN = 'ADMIN',
+}
+
 export interface AuthenticatedUser {
 	id: string;
 	name: string;
 	email: string;
+	role?: Role;
+	roles?: Role[];
 }
 
 export class AuthTokensDto {

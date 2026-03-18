@@ -42,7 +42,7 @@ export class TypeOrmUserRepository implements UserRepository {
 	}
 
 	async createUser(
-		data: Pick<UserEntity, 'name' | 'email' | 'hashedPassword'>,
+		data: Pick<UserEntity, 'name' | 'email' | 'hashedPassword' | 'roles'>,
 	): Promise<UserEntity> {
 		const entity = this.repository.create(data);
 		return this.repository.save(entity);

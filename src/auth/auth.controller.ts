@@ -22,7 +22,7 @@ import {
 	ResetPasswordDto,
 } from 'src/auth/dto';
 import { JwtGuard } from 'src/utils/guards';
-import { GetUser, GetUserId, Public } from 'src/utils/decorator';
+import { GetUser, GetUserId, Private } from 'src/utils/decorator';
 import { AuthenticatedUser, AuthTokensDto, MessageDto, UserProfileDto } from 'src/types';
 import { Throttle } from '@nestjs/throttler';
 
@@ -32,7 +32,6 @@ import { Throttle } from '@nestjs/throttler';
 export class AuthController {
 	constructor(private authService: AuthService) {}
 
-	@Public()
 	@Post('signin')
 	@Throttle({ default: { ttl: 60000, limit: 10 } })
 	@ApiOperation({ summary: 'Sign in and receive access/refresh tokens' })
@@ -53,7 +52,6 @@ export class AuthController {
 		return this.authService.signin(dto);
 	}
 
-	@Public()
 	@Post('signup')
 	@ApiOperation({ summary: 'Create an account and receive access/refresh tokens' })
 	@ApiBody({ type: AuthSignupDto })
@@ -71,6 +69,7 @@ export class AuthController {
 		return this.authService.signup(dto);
 	}
 
+	@Private()
 	@UseGuards(JwtGuard)
 	@Get('me')
 	@ApiBearerAuth()
@@ -89,6 +88,7 @@ export class AuthController {
 		return this.authService.getMe(user);
 	}
 
+	@Private()
 	@UseGuards(JwtGuard)
 	@Patch('change-password')
 	@ApiBearerAuth()
@@ -108,7 +108,6 @@ export class AuthController {
 		return this.authService.changePassword(userId, changePasswordDto);
 	}
 
-	@Public()
 	@Post('forgot-password')
 	@Throttle({ default: { ttl: 60000, limit: 5 } })
 	@ApiOperation({ summary: 'Request a password reset token' })
@@ -127,7 +126,6 @@ export class AuthController {
 		return this.authService.forgotPassword(forgotPasswordDto);
 	}
 
-	@Public()
 	@Post('refresh')
 	@ApiOperation({ summary: 'Rotate and return fresh access/refresh tokens' })
 	@ApiBody({ type: RefreshTokenDto })
@@ -145,6 +143,7 @@ export class AuthController {
 		return this.authService.refreshToken(dto.refreshToken);
 	}
 
+	@Private()
 	@UseGuards(JwtGuard)
 	@Post('logout')
 	@ApiBearerAuth()
@@ -163,7 +162,6 @@ export class AuthController {
 		return this.authService.logout(userId);
 	}
 
-	@Public()
 	@Post('reset-password')
 	@ApiOperation({ summary: 'Reset password using email and reset token' })
 	@ApiBody({ type: ResetPasswordDto })
