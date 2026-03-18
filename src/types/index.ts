@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export interface User {
 	id: string;
 	email: string;
@@ -17,4 +19,36 @@ export interface AuthTokens {
 	refresh_token: string;
 }
 
-export * from 'src/types/authenticated-user.type';
+export interface AuthenticatedUser {
+	id: string;
+	name: string;
+	email: string;
+}
+
+export class AuthTokensDto {
+	@ApiProperty({
+		example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+	})
+	access_token: string;
+
+	@ApiProperty({
+		example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+	})
+	refresh_token: string;
+}
+
+export class MessageDto {
+	@ApiProperty({ example: 'Operation completed successfully' })
+	message: string;
+}
+
+export class UserProfileDto {
+	@ApiProperty({ format: 'uuid', example: '12b8db5d-c918-46ed-85df-4b5f487d81a0' })
+	id: string;
+
+	@ApiProperty({ example: 'user@example.com' })
+	email: string;
+
+	@ApiProperty({ example: 'Aditya' })
+	name: string;
+}
