@@ -3,9 +3,11 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
+	app.use(helmet());
 	const configService = app.get(ConfigService);
 	const configuredOrigins = configService.get<string>('CORS_ORIGIN');
 	const defaultOrigins =
