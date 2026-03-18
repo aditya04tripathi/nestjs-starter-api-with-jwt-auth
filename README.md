@@ -288,6 +288,13 @@ bun run db:seed
 
 All API responses pass through a response-transform interceptor and are wrapped under `data`.
 
+### Public vs private routes
+
+This starter is **public by default**: routes do not require authentication unless explicitly marked.
+
+- Mark a route as authenticated with `@Private()`.
+- Restrict a route to specific roles with `@Roles([Role.USER, Role.ADMIN])`.
+
 ### Public endpoints
 
 - `GET    /`
@@ -433,7 +440,16 @@ Request:
   - `ThrottlerGuard`
   - `JwtGuard`
   - `RolesGuard`
-- `@Public()` bypasses auth guard for explicitly public routes.
+- `@Private()` enables JWT auth for a route/controller.
+- `@Roles([Role.USER, Role.ADMIN])` requires JWT auth and checks `req.user.roles`.
+
+### Roles
+
+- `Role.USER`
+- `Role.ADMIN`
+
+New signups default to `Role.USER`.
+The seed script creates `admin@example.com` with `Role.ADMIN`.
 
 ### Throttling and CORS
 
