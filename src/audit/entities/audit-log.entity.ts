@@ -29,6 +29,6 @@ export class AuditLogEntity {
 	@Column({ type: 'varchar', length: 512, nullable: true })
 	userAgent: string | null;
 
-	@CreateDateColumn({ type: 'datetime' })
+	@CreateDateColumn({ type: 'timestamptz' })
 	createdAt: Date;
 }
